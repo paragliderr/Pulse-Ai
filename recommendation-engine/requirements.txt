@@ -1,0 +1,30 @@
+# API
+fastapi==0.115.0
+uvicorn[standard]==0.31.0
+pydantic==2.9.2
+python-dotenv==1.0.1
+
+# ML
+torch==2.4.1
+torch-geometric==2.6.1
+numpy==1.26.4
+pandas==2.2.3
+scikit-learn==1.5.2
+
+# Explainability
+shap==0.46.0
+lime==0.2.0.1
+
+# Data sources
+yfinance==0.2.44
+requests==2.32.3
+
+# NLP (sentiment scoring on headlines)
+transformers==4.45.1
+
+# Storage
+psycopg2-binary==2.9.9
+redis==5.1.0
+
+# Dev / testing
+pytest==8.3.3

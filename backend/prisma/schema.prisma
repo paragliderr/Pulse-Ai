@@ -1,0 +1,85 @@
+// Prisma schema for Pulse AI backend.
+// Mirrors the dataset schema from the Milestone 2 report: users, personas,
+// watchlists, and interaction events (used by the recommendation engine
+// for graph/session construction).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Persona {
+  RISK_AVERSE
+  DAY_TRADER
+  LONG_TERM_HOLDER
+  UNSET
+}
+
+enum InteractionAction {
+  VIEW
+  CLICK
+  DWELL
+  WATCHLIST_ADD
+  WATCHLIST_REMOVE
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  passwordHash  String
+  persona       Persona        @default(UNSET)
+  createdAt     DateTime       @default(now())
+
+  watchlist     WatchlistItem[]
+  interactions  Interaction[]
+  sessions      Session[]
+}
+
+model WatchlistItem {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  ticker    String
+  addedAt   DateTime @default(now())
+
+  @@unique([userId, ticker])
+}
+
+model Session {
+  id           String        @id @default(uuid())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id])
+  startedAt    DateTime      @default(now())
+  endedAt      DateTime?
+  interactions Interaction[]
+}
+
+model Interaction {
+  id        String             @id @default(uuid())
+  userId    String
+  user      User               @relation(fields: [userId], references: [id])
+  sessionId String
+  session   Session            @relation(fields: [sessionId], references: [id])
+  itemId    String             // ticker or news article id
+  itemType  String             // "ticker" | "news"
+  action    InteractionAction
+  timestamp DateTime           @default(now())
+}
+
+// Cached copy of recommendation-engine output, refreshed periodically.
+// Avoids calling the ML service on every page load.
+model FeedCache {
+  id            String   @id @default(uuid())
+  userId        String
+  itemId        String
+  itemType      String
+  score         Float
+  explanation   Json
+  generatedAt   DateTime @default(now())
+
+  @@index([userId])
+}

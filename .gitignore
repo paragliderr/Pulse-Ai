@@ -1,0 +1,27 @@
+# env
+.env
+.env.local
+
+# node
+node_modules/
+.next/
+dist/
+build/
+npm-debug.log*
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+.ipynb_checkpoints/
+
+# data / models (large, regenerated)
+recommendation-engine/data_cache/
+recommendation-engine/checkpoints/
+*.pt
+*.pkl
+
+# os
+.DS_Store
