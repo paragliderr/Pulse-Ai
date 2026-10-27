@@ -1,0 +1,10 @@
+# Everything planned for later milestones (explainability, live data, NLP).
+-r requirements-lite.txt
+-r requirements-ml.txt
+shap>=0.45
+lime>=0.2
+yfinance>=0.2.40
+transformers>=4.40
+psycopg2-binary>=2.9
+redis>=5.0
+pytest>=8.0

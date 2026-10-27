@@ -1,0 +1,130 @@
+{
+  "warm_user": {
+    "user": 0,
+    "prefix_len": 3,
+    "history_available": true,
+    "long_term_share_of_user_vector": 0.2601516544818878,
+    "top_recommendations": [
+      {
+        "item": 79,
+        "ticker": 7,
+        "score": 4.109234809875488,
+        "is_actual_next_click": false,
+        "decomposition": {
+          "long_term_collaborative": 0.17462942004203796,
+          "long_term_content": 1.6115864515304565,
+          "session_collaborative": 0.647878885269165,
+          "session_content": 1.6751399040222168
+        },
+        "feature_group_effect": {
+          "sector": 2.5962977409362793,
+          "market_cap": 0.12692856788635254,
+          "sentiment": 0.7562460899353027,
+          "momentum": -0.4394822120666504
+        }
+      },
+      {
+        "item": 76,
+        "ticker": 7,
+        "score": 4.105241775512695,
+        "is_actual_next_click": false,
+        "decomposition": {
+          "long_term_collaborative": 0.17312142252922058,
+          "long_term_content": 1.667585849761963,
+          "session_collaborative": 0.3505895137786865,
+          "session_content": 1.9139454364776611
+        },
+        "feature_group_effect": {
+          "sector": 2.797031879425049,
+          "market_cap": 0.2114582061767578,
+          "sentiment": 0.5204544067382812,
+          "momentum": 0.16007757186889648
+        }
+      },
+      {
+        "item": 71,
+        "ticker": 7,
+        "score": 4.103011131286621,
+        "is_actual_next_click": false,
+        "decomposition": {
+          "long_term_collaborative": 0.16873231530189514,
+          "long_term_content": 1.6873091459274292,
+          "session_collaborative": 0.39122825860977173,
+          "session_content": 1.8557419776916504
+        },
+        "feature_group_effect": {
+          "sector": 2.6774280071258545,
+          "market_cap": 0.14696788787841797,
+          "sentiment": 0.7773971557617188,
+          "momentum": -0.1780261993408203
+        }
+      }
+    ]
+  },
+  "cold_user": {
+    "user": 5,
+    "prefix_len": 3,
+    "history_available": false,
+    "long_term_share_of_user_vector": 0.0,
+    "top_recommendations": [
+      {
+        "item": 334,
+        "ticker": 33,
+        "score": 1.4492268562316895,
+        "is_actual_next_click": false,
+        "decomposition": {
+          "long_term_collaborative": 0.0,
+          "long_term_content": 0.0,
+          "session_collaborative": 0.36559420824050903,
+          "session_content": 1.0836327075958252
+        },
+        "feature_group_effect": {
+          "sector": 0.6935338377952576,
+          "market_cap": 1.1238384246826172,
+          "sentiment": -0.10300540924072266,
+          "momentum": -0.08742821216583252
+        }
+      },
+      {
+        "item": 333,
+        "ticker": 33,
+        "score": 1.3974446058273315,
+        "is_actual_next_click": false,
+        "decomposition": {
+          "long_term_collaborative": 0.0,
+          "long_term_content": 0.0,
+          "session_collaborative": 0.07865338027477264,
+          "session_content": 1.3187912702560425
+        },
+        "feature_group_effect": {
+          "sector": 0.7861474752426147,
+          "market_cap": 1.0852923393249512,
+          "sentiment": 0.013333439826965332,
+          "momentum": 0.02328479290008545
+        }
+      },
+      {
+        "item": 335,
+        "ticker": 33,
+        "score": 1.3627675771713257,
+        "is_actual_next_click": false,
+        "decomposition": {
+          "long_term_collaborative": 0.0,
+          "long_term_content": 0.0,
+          "session_collaborative": 0.17324471473693848,
+          "session_content": 1.1895229816436768
+        },
+        "feature_group_effect": {
+          "sector": 0.7049960494041443,
+          "market_cap": 1.137819766998291,
+          "sentiment": -0.011088013648986816,
+          "momentum": -0.08173036575317383
+        }
+      }
+    ]
+  },
+  "mean_long_term_share": {
+    "warm": 0.21449913756223396,
+    "cold": 0.0
+  }
+}
