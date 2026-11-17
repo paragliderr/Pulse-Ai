@@ -32,13 +32,20 @@ class Dataset:
     user_persona: np.ndarray     # (n_users,)
     sessions: list = field(default_factory=list)   # per user: list of np.ndarray (chronological)
     cold_users: np.ndarray = None                  # bool mask (n_users,)
+    meta: dict = field(default_factory=dict)       # item attrs + per-user favourites/watchlists (for drift simulation)
 
 
-def _build_items(rng, n_tickers=40, stories_per_ticker=10):
-    sector_of_ticker = np.repeat(np.arange(len(SECTORS)), n_tickers // len(SECTORS))
-    rng.shuffle(sector_of_ticker)
-    tier_of_ticker = np.array([0] * 10 + [1] * 18 + [2] * (n_tickers - 28))
-    rng.shuffle(tier_of_ticker)
+def _build_items(rng, n_tickers=40, stories_per_ticker=10, universe=None):
+    if universe is not None:
+        # fixed real-ticker universe: [(symbol, sector_idx, tier_idx), ...]
+        n_tickers = len(universe)
+        sector_of_ticker = np.array([u[1] for u in universe])
+        tier_of_ticker = np.array([u[2] for u in universe])
+    else:
+        sector_of_ticker = np.repeat(np.arange(len(SECTORS)), n_tickers // len(SECTORS))
+        rng.shuffle(sector_of_ticker)
+        tier_of_ticker = np.array([0] * 10 + [1] * 18 + [2] * (n_tickers - 28))
+        rng.shuffle(tier_of_ticker)
 
     ticker_mood = rng.normal(0, 0.45, n_tickers)       # market sentiment per ticker
     ticker_mom = rng.normal(0, 0.45, n_tickers)        # price momentum per ticker
@@ -90,16 +97,17 @@ def _persona_item_scores(persona, it, rng, fav_sectors, watch_tickers):
     return s
 
 
-def generate(seed=0, n_users=1000, cold_frac=0.2, min_sessions=5, max_sessions=11):
+def generate(seed=0, n_users=1000, cold_frac=0.2, min_sessions=5, max_sessions=11, universe=None):
     rng = np.random.default_rng(seed)
-    it = _build_items(rng)
+    it = _build_items(rng, universe=universe)
     n_items = it["n_items"]
     user_persona = rng.integers(0, len(PERSONAS), n_users)
 
-    sessions_all = []
+    sessions_all, fav_all, watch_all = [], [], []
     for u in range(n_users):
         fav_sectors = rng.choice(len(SECTORS), 2, replace=False)
         watch_tickers = rng.choice(it["n_tickers"], 4, replace=False)
+        fav_all.append(fav_sectors); watch_all.append(watch_tickers)
         base = _persona_item_scores(user_persona[u], it, rng, fav_sectors, watch_tickers)
 
         user_sessions = []
@@ -140,6 +148,7 @@ def generate(seed=0, n_users=1000, cold_frac=0.2, min_sessions=5, max_sessions=1
         item_ticker=it["item_ticker"], item_sector=it["item_sector"],
         item_tier=it["item_tier"], item_feat=it["feat"], feat_groups=it["groups"],
         user_persona=user_persona, sessions=sessions_all, cold_users=cold,
+        meta=dict(it=it, fav=fav_all, watch=watch_all),
     )
 
 
@@ -186,3 +195,53 @@ def edges_from(train, val=None):
                     pairs.add((u, int(i)))
     arr = np.array(sorted(pairs), dtype=np.int64) if pairs else np.zeros((0, 2), dtype=np.int64)
     return arr[:, 0], arr[:, 1]
+
+
+# --------------------------------------------------------------------------
+# Regime shift (used by the drift experiment)
+# --------------------------------------------------------------------------
+def _regime_adjust(base, it, regime):
+    """regime 0 = original. regime 2 adds a tone/volatility reversal on top of the persona rotation."""
+    if regime < 2:
+        return base
+    return base - 1.0 * it["sentiment"] + 0.8 * np.abs(it["momentum"])
+
+
+def simulate_sessions(ds, regime=1, n_sessions=3, seed=123):
+    """New sessions for the SAME users and items under a different regime (see _regime_adjust)."""
+    rng = np.random.default_rng(seed)
+    it = ds.meta["it"]
+    n_items = ds.n_items
+    # regime >= 2: browsing becomes news-driven, so same-ticker/sector focus and story chains weaken
+    focus_scale, chain_scale = (0.35, 0.3) if regime >= 2 else (1.0, 1.0)
+    out = []
+    for u in range(ds.n_users):
+        fav_sectors, watch_tickers = ds.meta["fav"][u], ds.meta["watch"][u]
+        persona = (ds.user_persona[u] + (1 if regime >= 1 else 0)) % 3      # regime >= 1: every user starts behaving like another investor type
+        base = _regime_adjust(_persona_item_scores(persona, it, rng, fav_sectors, watch_tickers), it, regime)
+        user_sessions = []
+        for _ in range(n_sessions):
+            r = rng.random()
+            if r < 0.55:
+                pool = watch_tickers if rng.random() < 0.6 else rng.choice(it["n_tickers"], 3)
+                focus_t = int(rng.choice(pool)); focus_s = -1
+            elif r < 0.85:
+                focus_s = int(rng.choice(fav_sectors if rng.random() < 0.5 else np.arange(len(SECTORS))))
+                focus_t = -1
+            else:
+                focus_t, focus_s = -1, -1
+            seq = []
+            for _step in range(int(rng.integers(4, 10))):
+                sc = base.copy()
+                if focus_t >= 0:
+                    sc += 2.2 * focus_scale * (it["item_ticker"] == focus_t)
+                if focus_s >= 0:
+                    sc += 1.6 * focus_scale * (it["item_sector"] == focus_s)
+                if seq:
+                    sc += 0.9 * chain_scale * (it["item_ticker"] == it["item_ticker"][seq[-1]])
+                    sc[seq] -= 1.5
+                p = np.exp(sc - sc.max()); p /= p.sum()
+                seq.append(int(rng.choice(n_items, p=p)))
+            user_sessions.append(np.array(seq, dtype=np.int64))
+        out.append(user_sessions)
+    return out

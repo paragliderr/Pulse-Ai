@@ -26,6 +26,7 @@ HIST_NORM = np.log1p(60.0)
 # --------------------------------------------------------------------------
 def rank_metrics(scores, targets):
     tgt = scores[np.arange(len(targets)), targets]
+    # pessimistic ties: anything tied with the target counts as ranked above it
     ranks = (scores >= tgt[:, None]).sum(1)
     out = {}
     for k in (10, 20):
